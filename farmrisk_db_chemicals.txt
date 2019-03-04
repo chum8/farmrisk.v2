@@ -1,0 +1,4 @@
+insert into chemicals(id_chemical, name) values(8,'nitrogen')
+insert into chemicals(id_chemical, name) values(4,'phosphorus')
+insert into chemicals(id_chemical, name) values(2,'sulfur')
+insert into chemicals(id_chemical, name) values(1,'zinc')

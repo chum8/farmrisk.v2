@@ -1,0 +1,62 @@
+# import needed libraries
+import csv
+import random
+from farmrisk_needs import *
+# from farmrisk_products import *
+import pymysql
+
+# declare some variables
+filename1, filename2 = 'data/needs-01.csv', 'data/fertilizers-01.csv'
+
+# functions
+def connect(user,password):
+    connection = pymysql.connect(   host='localhost',
+                                    user=user,
+                                    database='farmrisk',
+                                    password=password,
+                                    charset='utf8mb4',
+                                    port=5136
+                                )
+    return connection
+
+# open database connection
+connection = connect('farmrisk','zRC56%jT#**X')
+def populate(connection, filename1, filename2):
+    # get need data and write to database
+    need1 = Need()
+    need_list = need1.read_needs(filename1)
+    with connection.cursor() as cursor:
+        for sql in need_list:
+            # print(sql) # debug
+            cursor.execute(sql)
+        cursor.execute("select * from needs") # debug
+        print(cursor.fetchall()) # debug
+    connection.commit()
+    
+
+        
+# now pass needs into new product class to create chemical blends
+#product1 = Product()
+#product1.read_products(filename2)
+# product1.print_products_raw() # debug line
+#product1.calculate_unit_prices()
+#product1.make_mixes()
+#product1.print_blends_raw()
+#product1.print_unit_prices() # debug line
+
+"""
+
+temp = {'unit_price': product_unit_prices[5]['unit_price'], 'rat': product_unit_prices[0]['pct_of_total_n']}
+product_list.append(temp)
+temp = {'unit_price': product_unit_prices[1]['unit_price'], 'rat': product_unit_prices[0]['pct_of_total_p']}
+product_list.append(temp)
+temp = {'unit_price': product_unit_prices[3]['unit_price'], 'rat': product_unit_prices[0]['pct_of_total_s']}
+product_list.append(temp)
+temp = {'unit_price': product_unit_prices[4]['unit_price'], 'rat': product_unit_prices[0]['pct_of_total_z']}
+product_list.append(temp)
+print(mix_a_product(product_list))
+
+# next job
+# build ratio tables for all the fields
+# pass the ratio table into a function along with the simple product(s) to calculate
+"""
