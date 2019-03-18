@@ -249,8 +249,8 @@ class Farmrisk():
 
                 # get random new name for blend and write
                 name = self.get_random_name()
-                self.sql(cursor, "insert into products(id_product, id_unit, parent_combo, name, price, composition, composition_hr, application, compound) values (" + str(new_id_product) + "," + str(total_id_unit) + "," + str(match) + ",'" + self.get_random_name() + "'," +
-                        str(total_price) + "," + str(existing_composition) + ",'" + existing_composition_hr + "'," + str(application) + "," + str(dft_compound_flag) + ")", '', dft_commit)
+                self.sql(cursor, "insert into products(id_product, id_unit, parent_combo, name, price, composition, composition_hr, application, compound, ratio) values (" + str(new_id_product) + "," + str(total_id_unit) + "," + str(match) + ",'" + self.get_random_name() + "'," +
+                        str(total_price) + "," + str(existing_composition) + ",'" + existing_composition_hr + "'," + str(application) + "," + str(dft_compound_flag) + "," + str(ratio) + ")", '', dft_commit)
             row_product += 1
 
     # top-level function to calculate new blended products that calls other functions
@@ -403,7 +403,7 @@ class Farmrisk():
                 f = csv.writer(write_file, delimiter=',',quotechar='"', quoting=csv.QUOTE_MINIMAL)
                  
                 # Export information about custom products
-                custom_products = [ x for x in self.sql(cursor, "select parent_combo, name, composition_hr, application, price, unit_price from products where parent_combo > 0", dft_fetch) ] 
+                custom_products = [ x for x in self.sql(cursor, "select parent_combo, name, composition_hr, application, price, unit_price, id_unit from products where parent_combo > 0", dft_fetch) ] 
                 f.writerow(["CUSTOM PRODUCTS"])
                 i = 1
                 for product in custom_products:
@@ -413,14 +413,39 @@ class Farmrisk():
                     temp_row.append("Composition")
                     temp_row.append("Application")
                     temp_row.append("Price")
+                    temp_row.append(dft_n.upper())
+                    temp_row.append(dft_p.upper())
+                    temp_row.append(dft_s.upper())
+                    temp_row.append(dft_z.upper())
                     f.writerow(temp_row)
 
+                    units = self.break_bins(product[6])
                     temp_row = []
                     temp_row.append('')
                     temp_row.append(product[1])
                     temp_row.append(product[2])
                     temp_row.append(get_application(product[3]).title())
                     temp_row.append(product[4])
+                    try:
+                        weight_n = [ x for x in self.sql(cursor, "select weight from units where id_unit in (" + ", ".join(str(x) for x in units) + ") and id_chemical = " + str(bin_n), dft_fetch)][0]
+                        temp_row.append(float(weight_n[0]))
+                    except:
+                        temp_row.append(0)
+                    try:
+                        weight_p = [ x for x in self.sql(cursor, "select weight from units where id_unit in (" + ", ".join(str(x) for x in units) + ") and id_chemical = " + str(bin_p), dft_fetch)][0]
+                        temp_row.append(float(weight_p[0]))
+                    except:
+                        temp_row.append(0)
+                    try:
+                        weight_s = [ x for x in self.sql(cursor, "select weight from units where id_unit in (" + ", ".join(str(x) for x in units) + ") and id_chemical = " + str(bin_s), dft_fetch)][0]
+                        temp_row.append(float(weight_s[0]))
+                    except:
+                        temp_row.append(0)
+                    try:
+                        weight_z = [ x for x in self.sql(cursor, "select weight from units where id_unit in (" + ", ".join(str(x) for x in units) + ") and id_chemical = " + str(bin_z), dft_fetch)][0]
+                        temp_row.append(float(weight_z[0]))
+                    except:
+                        temp_row.append(0)
                     f.writerow(temp_row)
 
                     f.writerow('')
@@ -734,24 +759,24 @@ farmrisk1.be_verbose = False
 
 # 4. get need and product data and write to database
 # you only need to perform this step if you haven't done it on fresh data
-# farmrisk1.populate(filename1, filename2) # uncomment to populate
+farmrisk1.populate(filename1, filename2) # uncomment to populate
 
 # 5. calculate all possible products
 # you only need to perform this step if you haven't done it on fresh data
-# farmrisk1.calculate("temp") # uncomment to calculate
+farmrisk1.calculate("temp") # uncomment to calculate
 
 # 6. calculate all unit prices
 # you only need to perform this step if you haven't done it on fresh data
-# farmrisk1.unit_prices() # uncomment to calculate
+farmrisk1.unit_prices() # uncomment to calculate
 
 # 7. calculate all possible products that can meet a need
 # this is similar to step 5.
 # you only need to perform this step if you haven't done it on fresh data
-# farmrisk1.calculate_combo("combos") # uncomment to calculate
+farmrisk1.calculate_combo("combos") # uncomment to calculate
 
 # 8. for each need, see what it would cost to meet it with each and every product
 # you only need to perform this step if you haven't done it on fresh data
-# farmrisk1.meet_needs() # uncomment to calculate
+farmrisk1.meet_needs() # uncomment to calculate
 
 # 9. now, generate a beautiful report
 farmrisk1.report()
