@@ -8,7 +8,7 @@ drop table if exists temp
 drop table if exists purchases
 create table chemicals(id_chemical tinyint, name varchar(16))
 create table needs(id_need smallint, name varchar(40), grain varchar(12), n decimal(9,4), p decimal(9,4), s decimal(9,4), z decimal (9,4), composition tinyint, composition_hr char(8))
-create table products(id_product int, id_unit bigint, parent_combo bigint, name varchar(24), price decimal(8,4), composition tinyint, composition_hr char(4), application tinyint, compound tinyint, unit_price decimal (12,4), ratio decimal (8,4))
+create table products(id_product int, id_unit bigint, parent_combo bigint, name varchar(24), price decimal(8,4), composition tinyint, composition_hr char(4), application tinyint, compound tinyint, unit_price decimal (12,4))
 create table units(id_unit bigint, id_chemical tinyint, weight decimal(12,4),application tinyint, compound tinyint)
 create table combos(id_temp bigint, composition tinyint, composition_hr char(4), application tinyint)
 create table combos_temp(id_temp bigint, price decimal(12,4))
