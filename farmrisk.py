@@ -249,8 +249,8 @@ class Farmrisk():
 
                 # get random new name for blend and write
                 name = self.get_random_name()
-                self.sql(cursor, "insert into products(id_product, id_unit, parent_combo, name, price, composition, composition_hr, application, compound, ratio) values (" + str(new_id_product) + "," + str(total_id_unit) + "," + str(match) + ",'" + self.get_random_name() + "'," +
-                        str(total_price) + "," + str(existing_composition) + ",'" + existing_composition_hr + "'," + str(application) + "," + str(dft_compound_flag) + "," + str(ratio) + ")", '', dft_commit)
+                self.sql(cursor, "insert into products(id_product, id_unit, parent_combo, name, price, composition, composition_hr, application, compound) values (" + str(new_id_product) + "," + str(total_id_unit) + "," + str(match) + ",'" + self.get_random_name() + "'," +
+                        str(total_price) + "," + str(existing_composition) + ",'" + existing_composition_hr + "'," + str(application) + "," + str(dft_compound_flag) + ")", '', dft_commit)
             row_product += 1
 
     # top-level function to calculate new blended products that calls other functions
@@ -467,9 +467,10 @@ class Farmrisk():
                     temp_row.append('')
                     temp_row.append('')
                     temp_row.append("Name")
-                    temp_row.append("Composition")
                     temp_row.append("Ratio")
-                    temp_row.append("Total Amount")
+                    temp_row.append("Composition")
+                    temp_row.append("Application")
+                    temp_row.append("Price")
                     f.writerow(temp_row)
 
                     temp_row = []
@@ -479,10 +480,47 @@ class Farmrisk():
                     temp_row.append('')
                     temp_row.append('')
 
-                    for p in parent_products:
-                        temp_p = [ x for x in self.sql(cursor, "select name, composition_hr from products where id_product = " + str(p), dft_fetch) ][0]
-                        temp_row.append(temp_p[0])
-                        temp_row.append(temp_p[1])
+                    for par in parent_products:
+                        temp_par = [ x for x in self.sql(cursor, "select name, composition_hr, application, price, id_unit from products where id_product = " + str(par), dft_fetch) ][0]
+                        units = self.break_bins(temp_par[4])
+                        # calculate ratio
+                        # here, it doesn't matter if we end up fetching the weight of n, p, s or z because the ratio should be the same when calculated against the child product using the same chemical
+                        weight_t = 0
+                        try:
+                            weight_t = [ x for x in self.sql(cursor, "select weight from units where id_unit in (" + ", ".join(str(x) for x in units) + ") and id_chemical = " + str(bin_n), dft_fetch)][0]
+                            t_bin = bin_n
+                        except:
+                            try:
+                                weight_t = [ x for x in self.sql(cursor, "select weight from units where id_unit in (" + ", ".join(str(x) for x in units) + ") and id_chemical = " + str(bin_p), dft_fetch)][0]
+                                t_bin = bin_p
+                            except:
+                                try:
+                                    weight_t = [ x for x in self.sql(cursor, "select weight from units where id_unit in (" + ", ".join(str(x) for x in units) + ") and id_chemical = " + str(bin_s), dft_fetch)][0]
+                                    t_bin = bin_s
+                                except:
+                                    try:
+                                        weight_t = [ x for x in self.sql(cursor, "select weight from units where id_unit in (" + ", ".join(str(x) for x in units) + ") and id_chemical = " + str(bin_z), dft_fetch)][0]
+                                        t_bin = bin_z
+                                    except:
+                                        print("A failure occured while reporting.  A blended chemical could not be calculated.")
+
+                        weight_t = float(weight_t[0])
+                        if t_bin == bin_n:
+                            weight_par =  float(weight_n[0])
+                        if t_bin == bin_p:
+                            weight_par =  float(weight_p[0])
+                        if t_bin == bin_s:
+                            weight_par =  float(weight_s[0])
+                        if t_bin == bin_z:
+                            weight_par =  float(weight_z[0])
+
+                        ratio = safe_divide(weight_par, weight_t)
+
+                        temp_row.append(temp_par[0])
+                        temp_row.append(ratio)
+                        temp_row.append(temp_par[1])
+                        temp_row.append(get_application(temp_par[2]).title())
+                        temp_row.append(ratio * float(temp_par[3]))
                         f.writerow(temp_row)
                         temp_row = []
                         temp_row.append('')
